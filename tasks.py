@@ -13,14 +13,32 @@ celery_app = Celery(
 )
 
 @celery_app.task
-def process_document(pdf_path):
-  text = extract_text_from_pdf(pdf_path)
-  chunks = chunk_text(text)
-  embeddings = generate_embeddings(chunks)
-  document_name = os.path.basename(pdf_path)
-  uploaded_chunks = upload_chunks(embeddings, document_name, chunks)
+def extract_text_pdf_task(file_path):
+  text = extract_text_from_pdf(file_path)
+  document_name = os.path.basename(file_path)
   return {
-    "documents": pdf_path,
-    "chunks": len(chunks),
-    "status": "completed"
+    "text":text,
+    "document_name": document_name
   }
+
+@celery_app.task
+def get_chunks_task(data):
+  chunks = chunk_text(data['text'])
+  return {
+    "chunks": chunks,
+    "document_name": data['document_name']
+  }
+
+@celery_app.task
+def generate_embeddings_task(data):
+  embedded_chunks = generate_embeddings(data['chunks'])
+  return {
+    "embeddings": embedded_chunks.tolist(),
+    "chunks": data['chunks'],
+    "document_name": data['document_name']
+  }
+
+@celery_app.task
+def upload_vector_task(data):
+  upload_chunks(data['embeddings'], data['document_name'], data['chunks'])
+  return "Upload Completed"

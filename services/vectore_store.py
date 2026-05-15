@@ -14,7 +14,7 @@ def upload_chunks(embedded_chunks, document_name, chunks):
   for index,(chunk,embedding) in enumerate(zip(chunks, embedded_chunks)):
     point = PointStruct(
       id=index,
-      vector=embedding.tolist(),
+      vector=embedding,
       payload = {
         "text": chunk,
         "document": document_name,
