@@ -1,0 +1,6 @@
+celery
+redis
+pymupdf
+sentence-transformers
+qdrant-client
+numpy
