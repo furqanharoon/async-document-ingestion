@@ -1,6 +1,6 @@
 from celery import Celery
 from celery import group
-
+from celery import chord
 import os
 
 from services.pdf_reader import (extract_text_from_pdf)
@@ -43,28 +43,37 @@ def generate_embedding_task(chunk):
 def generate_embeddings_parallel_task(data):
   chunks = data['chunks']
   document_name = data['document_name']
-  embedding_group = group(
+  embedding_tasks = group(
     generate_embedding_task.s(chunk)
     for chunk in chunks
   )
-  results = embedding_group.apply_async()
-  embedding_results = results.get()
-  return {
-    "embedding_results": embedding_results,
-    "document_name": document_name
-  }
+  # Chord works like this:
+  # chord(header)(callback)
+  # The header means the tasks that needs to finish first. they are usually Parallel tasks. The 'callback' means the tasks that will after header tasks are complete.
+  workflow = chord(
+    embedding_tasks
+  )(
+    upload_vector_task.s(document_name)
+  )
+  return workflow.id
 
-@celery_app.task
-def upload_vector_task(data):
-  # upload_chunks(data['embeddings'], data['document_name'], data['chunks'])
-  # return "Upload Completed"
+
+
+@celery_app.task(
+  autoretry_for=(Exception,),
+  retry_kwargs={"max_retries": 15},
+  retry_backoff=True
+  # This is exponential back-off. The retry time exponentially increases
+  # Retry 1 → wait 10s
+  # Retry 2 → wait 20s
+  # Retry 3 → wait 40s
+  # Retry 4 → wait 80s
+)
+def upload_vector_task(embedding_results, document_name):
   chunks = []
   embeddings = []
-
-  for embedding_result in data['embedding_results']:
-    embeddings.append(embedding_result['embedding'])
-    chunks.append(embedding_result['chunk'])
-  
-  upload_chunks(embeddings, data['document_name'], chunks)
+  for result in embedding_results:
+    embeddings.append(result['embedding'])
+    chunks.append(result['chunk'])
+  upload_chunks(embeddings, chunks, document_name)
   return "Upload Completed"
-

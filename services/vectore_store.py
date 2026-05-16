@@ -1,16 +1,14 @@
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct
 
-qdrant = QdrantClient(
-  host="localhost",
-  port=6333
-)
-COLLECTION_NAME = "documents"
+def upload_chunks(embedded_chunks, chunks, document_name):
+  qdrant = QdrantClient(
+    host="localhost",
+    port=6333
+  )
+  COLLECTION_NAME = "documents"
 
-points = []
-
-def upload_chunks(embedded_chunks, document_name, chunks):
-  
+  points = []
   for index,(chunk,embedding) in enumerate(zip(chunks, embedded_chunks)):
     point = PointStruct(
       id=index,

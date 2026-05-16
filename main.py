@@ -8,7 +8,6 @@ workflow = chain(
   extract_text_pdf_task.s(file_path),
   get_chunks_task.s(),
   generate_embeddings_parallel_task.s(),
-  upload_vector_task.s()
 )
 workflow.delay()
-print('Workflow', workflow)
+print('Workflow', type(workflow))
