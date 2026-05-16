@@ -6,3 +6,7 @@ embedding_model = SentenceTransformer(
 )
 def generate_embeddings(chunks):
   return embedding_model.encode(chunks)
+
+def generate_single_chunk_embedding(chunk):
+  embedding = embedding_model.encode(chunk)
+  return embedding.tolist()
