@@ -7,21 +7,31 @@ def upload_chunks(embedded_chunks, chunks, document_name):
     port=6333
   )
   COLLECTION_NAME = "documents"
-
-  points = []
-  for index,(chunk,embedding) in enumerate(zip(chunks, embedded_chunks)):
-    point = PointStruct(
-      id=index,
-      vector=embedding,
-      payload = {
-        "text": chunk,
-        "document": document_name,
-        "chunk_index":index
-      }
-    )
-    points.append(point)
   
-  qdrant.upsert(
-    collection_name=COLLECTION_NAME,
-    points=points
-  )
+  BATCH_SIZE=100
+
+  for batch_start in range(
+    0,
+    len(chunks),
+    BATCH_SIZE
+  ):
+    points = []
+    batch_chunks = chunks[batch_start:batch_start + BATCH_SIZE]
+
+    batch_embeddings = embedded_chunks[batch_start:batch_start + BATCH_SIZE]
+
+    for index,(chunk,embedding) in enumerate(zip(batch_chunks, batch_embeddings)):
+      point = PointStruct(
+        id=batch_start+index,
+        vector=embedding,
+        payload = {
+          "text": chunk,
+          "document": document_name,
+          "chunk_index":batch_start + index
+        }
+      )
+      points.append(point)
+    qdrant.upsert(
+      collection_name=COLLECTION_NAME,
+      points=points
+    )
