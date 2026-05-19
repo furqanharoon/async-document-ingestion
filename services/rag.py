@@ -19,16 +19,32 @@ print("Chunk Texts Array", len(chunk_texts))
 # 3- Get top_k chunks and append it to context and then send the context along with query and detailed system prompt to LLM
 
 context = ""
-for chunk_text in chunk_texts:
-  context +=f"""\n \n {chunk_text}"""
+for index, chunk_text in enumerate(chunk_texts):
+  context += f"\n\n CHUNK {index+1}: \n {chunk_text}"
+print("\n CONTEXT \n", context)
 
-prompt =f"""
-  You're a helpful assistant. You need to answer user's query by only using the given context and if YOU DON'T FIND ANYTHING just SAY I DONT KNOW and don't give any answer on your own. Here is the given context as follows:
-  {chunk_text}\n \n
+prompt=f"""
+You are a helpful AI assistant. You need to look only into the context and help users find answer to their question. If you don't find any Answer in the context, just say 'I wasn't able to find anything from the given context'. DO NOT HALLUCINATE or give any wrong answers.
 
-  QUESTION:
-  {query}
+Context:
+{context}
+
+Question:
+{query}
+
 """
+
+# context = ""
+# for chunk_text in chunk_texts:
+#   context +=f"""\n \n {chunk_text}"""
+
+# prompt =f"""
+#   You're a helpful assistant. You need to answer user's query by only using the given context and if YOU DON'T FIND ANYTHING just SAY I DONT KNOW and don't give any answer on your own. Here is the given context as follows:
+#   {chunk_text}\n \n
+
+#   QUESTION:
+#   {query}
+# """
 response = anthropic_client.messages.create(
   max_tokens=700,
   model="claude-sonnet-4-5",
