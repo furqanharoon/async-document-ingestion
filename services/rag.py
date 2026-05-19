@@ -31,20 +31,7 @@ Context:
 
 Question:
 {query}
-
 """
-
-# context = ""
-# for chunk_text in chunk_texts:
-#   context +=f"""\n \n {chunk_text}"""
-
-# prompt =f"""
-#   You're a helpful assistant. You need to answer user's query by only using the given context and if YOU DON'T FIND ANYTHING just SAY I DONT KNOW and don't give any answer on your own. Here is the given context as follows:
-#   {chunk_text}\n \n
-
-#   QUESTION:
-#   {query}
-# """
 response = anthropic_client.messages.create(
   max_tokens=700,
   model="claude-sonnet-4-5",
