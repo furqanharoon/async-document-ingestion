@@ -23,15 +23,19 @@ COLLECTION_NAME = 'documents'
 #   limit=10,
 # )
 
+MIN_SCORE = 0.65
 
 def embed_query(query):
   return embedding_model.encode(query).tolist()
 
 def retrieve_chunks(query):
+  points = []
   search_results = qdrant.query_points(
     collection_name=COLLECTION_NAME,
     query=embed_query(query),
     limit=5
   )
-  return search_results.points
-
+  for point in search_results.points:
+    if point.score >= MIN_SCORE:
+      points.append(point)
+  return points
