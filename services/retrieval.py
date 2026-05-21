@@ -28,12 +28,12 @@ MIN_SCORE = 0.65
 def embed_query(query):
   return embedding_model.encode(query).tolist()
 
-def retrieve_chunks(query):
+def retrieve_chunks(query,top_k=5):
   points = []
   search_results = qdrant.query_points(
     collection_name=COLLECTION_NAME,
     query=embed_query(query),
-    limit=5
+    limit=top_k
   )
   for point in search_results.points:
     if point.score >= MIN_SCORE:
